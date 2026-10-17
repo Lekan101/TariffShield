@@ -53,7 +53,7 @@ See [docs/local-dev.md](docs/local-dev.md) for troubleshooting local environment
 
 ### Code Style
 
-- **TypeScript** (`apps/api`, `apps/web`, `packages/sdk`): `strict` mode is enabled in every `tsconfig.json` — do not disable it or add `any` to work around a type error. Follow the existing import order (external packages, then internal `@tariffshield/*` / relative imports). Run before pushing:
+- **TypeScript** (`apps/api`, `apps/web`, `packages/sdk`): `strict` mode is enabled in every `tsconfig.json` — do not disable it or add `any` to work around a type error. Follow the existing import order (external packages, then internal `@tariffshield/*` / relative imports). Shared lint rules live in [`packages/eslint-config`](packages/eslint-config/README.md) — extend them with `"extends": ["tariffshield"]` in a workspace's `.eslintrc.json`. Run before pushing:
   ```bash
   npm run typecheck                      # runs typecheck in every workspace that defines it
   npm run lint --workspace=apps/api      # eslint --max-warnings 0
@@ -122,9 +122,9 @@ CI runs the contract, typecheck, and lint suites on every PR — see `.github/wo
 
 #### Operational-scripts test coverage
 
-`scripts/__tests__/` currently covers only: `check-contract-version`, `list-wasm-hashes`, `rollback-upgrade`, `rotate-admin`, `upgrade`, and `verify-upgrade`. The following `scripts/*.ts` files have **no** corresponding test in `scripts/__tests__/` and should be considered for future coverage:
+`scripts/__tests__/` currently covers: `backup-restore-drill` (for `backup-restore-drill.sh`), `check-contract-version`, `list-wasm-hashes`, `migrate-storage`, `rollback-upgrade`, `rotate-admin`, `upgrade`, and `verify-upgrade`. The following `scripts/*.ts` files have **no** corresponding test in `scripts/__tests__/` and should be considered for future coverage:
 
-`admin.ts`, `backup-cleanup-lambda.ts`, `backup-compliance-report-lambda.ts`, `backup-state.ts`, `dep-graph.ts`, `deploy-contracts.ts`, `e2e.ts`, `ingest-dast-findings.ts`, `migrate-storage.ts`, `sdk-smoke.ts`, `seed.ts`, `setup-env.ts`, `test-regulatory-report.ts`, `upgrade-dry-run.ts`.
+`admin.ts`, `backup-cleanup-lambda.ts`, `backup-compliance-report-lambda.ts`, `backup-state.ts`, `check-dep-graph.ts`, `dep-graph.ts`, `deploy-contracts.ts`, `e2e.ts`, `ingest-dast-findings.ts`, `sdk-smoke.ts`, `seed.ts`, `setup-env.ts`, `test-regulatory-report.ts`, `upgrade-dry-run.ts`, `verify-dast-findings.ts`.
 
 ### Regenerating API types
 

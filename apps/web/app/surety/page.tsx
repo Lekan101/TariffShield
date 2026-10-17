@@ -6,12 +6,16 @@ import { useEffect, useState } from 'react';
 import { Nav } from '@/components/Nav';
 import { api, ApiError, type Importer, type ImporterMetrics, stroopsToXlm } from '@/lib/api';
 import { getUser, isAuthenticated } from '@/lib/auth';
+import { NpsTrendWidget } from '@/components/NpsTrendWidget';
+import { ReportTemplateEditor } from '@/components/ReportTemplateEditor';
+import { CoSuretyExposureWidget } from '@/components/CoSuretyExposureWidget';
 
 export default function SuretyDashboard() {
   const router = useRouter();
   const [importers, setImporters] = useState<Importer[] | null>(null);
   const [metrics, setMetrics] = useState<ImporterMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [metricsError, setMetricsError] = useState(false);
   const [signupUrl, setSignupUrl] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -56,8 +60,10 @@ export default function SuretyDashboard() {
     try {
       const s = await api.getStats();
       setMetrics(s.metrics);
+      setMetricsError(false);
     } catch (e) {
       console.error('failed to load dashboard stats', e);
+      setMetricsError(true);
     }
   }
 
@@ -65,10 +71,54 @@ export default function SuretyDashboard() {
     <>
       <Nav />
       <main className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">Surety portfolio</h1>
-        <p className="mt-1 text-sm text-muted">
-          Bonded importers + emergency clawback. All actions execute on Stellar testnet.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Surety portfolio</h1>
+            <p className="mt-1 text-sm text-muted">
+              Bonded importers + emergency clawback. All actions execute on Stellar testnet.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/surety/disputes"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted/20"
+            >
+              <svg
+                className="w-4 h-4 text-muted"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+              Disputes
+            </Link>
+            <Link
+              href="/surety/audit-log"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted/20"
+            >
+              <svg
+                className="w-4 h-4 text-muted"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Surety Audit Log
+            </Link>
+          </div>
+        </div>
 
         {importers === null ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-4 animate-pulse">
@@ -89,6 +139,11 @@ export default function SuretyDashboard() {
             <MetricTile label="Avg. balance" value={`${stroopsToXlm(metrics.avgBalance)} XLM`} />
             <MetricTile label="Compliance rate" value={`${metrics.complianceRate}%`} />
           </div>
+        ) : metricsError ? (
+          <p className="mt-6 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
+            Metrics unavailable. Portfolio totals couldn&apos;t be loaded — the importer list below
+            is unaffected.
+          </p>
         ) : null}
 
         {error ? (
@@ -153,6 +208,13 @@ export default function SuretyDashboard() {
             </ul>
           )}
         </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <NpsTrendWidget />
+          <ReportTemplateEditor />
+          <BrandingEditor />
+        </div>
+        <CoSuretyExposureWidget />
       </main>
     </>
   );

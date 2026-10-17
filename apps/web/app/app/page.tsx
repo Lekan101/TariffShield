@@ -22,9 +22,17 @@ import { Nav } from '@/components/Nav';
 import { HealthScore } from '@/components/HealthScore';
 import { DepositWizard } from '@/components/DepositWizard';
 import { BondTimeline } from '@/components/BondTimeline';
+import { ComplianceExpirationCalendar } from '@/components/ComplianceExpirationCalendar';
+import { KycUploadDropzone } from '@/components/KycUploadDropzone';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { Spinner } from '@/components/Spinner';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { CurrencyDisplaySettings } from '@/components/CurrencyDisplaySettings';
+import { DashboardWidgetLayout } from '@/components/DashboardWidgetLayout';
+import { ImporterSetupPanel } from '@/components/ImporterSetupPanel';
+import { NpsSurvey } from '@/components/NpsSurvey';
+import { useDisplayCurrency } from '@/lib/useDisplayCurrency';
+import { formatConverted } from '@/lib/currency';
 import {
   api,
   type Importer,
@@ -49,6 +57,7 @@ function ImporterDashboard() {
   const [events, setEvents] = useState<ContractEvent[]>([]);
   const [refreshCount, setRefreshCount] = useState(0);
   const [showTopUpConfirm, setShowTopUpConfirm] = useState(false);
+  const displayCurrency = useDisplayCurrency();
 
   const refresh = useCallback(async () => {
     try {
@@ -148,6 +157,36 @@ function ImporterDashboard() {
 
   const onc = detail.onChainAccount;
 
+  const dashboardWidgets = {
+    health: <HealthScore collateral={collateral} required={required} reserve={reserve} />,
+    balance: (
+      <BalanceSummary
+        onChainAccount={onc}
+        shortfall={shortfall}
+        excess={excess}
+        utilization={utilization}
+        rate={displayCurrency.rate}
+      />
+    ),
+    yield: <YieldProjectionPanel currentBalanceStroops={onc.collateralBalance} />,
+    activity: (
+      <section aria-label="Bond activity">
+        <BondTimeline events={events} importerId={importer.id} userRole="importer" />
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            On-chain event log
+          </h2>
+          <EventLog
+            key={importer.id + '-' + refreshCount}
+            importerId={importer.id}
+            events={events}
+            setEvents={setEvents}
+          />
+        </div>
+      </section>
+    ),
+  };
+
   return (
     <>
       <Nav />
@@ -182,29 +221,20 @@ function ImporterDashboard() {
         {onc.isClawbacked ? (
           <div className="mt-6 rounded-lg border border-danger bg-danger/10 px-4 py-3 text-sm text-danger">
             <strong>Account frozen by surety.</strong> All collateral + reserve has been clawed
-            back. No further deposits or withdrawals allowed. Contact your surety support team
-            and review the on-chain event log below before taking another action.
+            back. No further deposits or withdrawals allowed. Contact your surety support team and
+            review the on-chain event log below before taking another action.
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-5 mt-6">
-          <div className="sm:col-span-2">
-            <HealthScore collateral={collateral} required={required} reserve={reserve} />
-          </div>
-          <div className="sm:col-span-3">
-            <BalanceSummary
-              onChainAccount={onc}
-              shortfall={shortfall}
-              excess={excess}
-              utilization={utilization}
-            />
-          </div>
+        <div className="mt-6">
+          <CurrencyDisplaySettings {...displayCurrency} />
         </div>
 
-        <YieldProjectionPanel currentBalanceStroops={onc.collateralBalance} />
+        <DashboardWidgetLayout widgets={dashboardWidgets} />
+        <ImporterSetupPanel />
 
         {!onc.isClawbacked && (
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div id="tariff" className="mt-6 grid gap-4 sm:grid-cols-3">
             <ActionCard
               title="Update tariff exposure"
               description="Re-run required collateral from annual duty estimate. Demo computes required = annual_duty × 10% × 50%."
@@ -245,7 +275,7 @@ function ImporterDashboard() {
         )}
 
         {!onc.isClawbacked && (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div id="deposit" className="mt-4 grid gap-4 sm:grid-cols-2">
             <button
               onClick={() => setShowTopUpConfirm(true)}
               disabled={busy !== null || shortfall === 0n}
@@ -327,20 +357,19 @@ function ImporterDashboard() {
 
         <ErrorBanner error={error} className="mt-4" />
 
-        <BondTimeline events={events} />
+        <div id="kyc" className="mt-8">
+          <KycUploadDropzone importerId={importer.id} />
+        </div>
 
-        <div className="mt-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-            On-chain event log
-          </h2>
-          <EventLog
-            key={importer.id + '-' + refreshCount}
-            importerId={importer.id}
-            events={events}
-            setEvents={setEvents}
-          />
+        <div className="mt-8">
+          <ComplianceExpirationCalendar importerId={importer.id} />
         </div>
       </main>
+
+      {/* #1035: a fixed, non-modal corner card — never overlaps deposit/withdraw
+          controls in the page flow above, and stays hidden entirely while an
+          action (deposit, withdraw, top-up) is in flight. */}
+      {busy === null && <NpsSurvey />}
     </>
   );
 }
@@ -359,11 +388,14 @@ const Stat = memo(function Stat({
   value,
   hint,
   accent,
+  converted,
 }: {
   label: string;
   value: string;
   hint?: string;
   accent?: 'success' | 'danger';
+  /** Issue #1037 — approximate display-currency equivalent shown alongside the base-token value. */
+  converted?: string;
 }) {
   const color =
     accent === 'success' ? 'text-success' : accent === 'danger' ? 'text-danger' : 'text-foreground';
@@ -371,6 +403,7 @@ const Stat = memo(function Stat({
     <div className="rounded-lg border border-border bg-card p-4">
       <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
       <p className={`mt-1 text-xl font-semibold ${color}`}>{value}</p>
+      {converted ? <p className="mt-0.5 text-xs text-muted">≈ {converted}</p> : null}
       {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
     </div>
   );
@@ -387,11 +420,14 @@ const BalanceSummary = memo(function BalanceSummary({
   shortfall,
   excess,
   utilization,
+  rate,
 }: {
   onChainAccount: ImporterDetail['onChainAccount'];
   shortfall: bigint;
   excess: bigint;
   utilization: number;
+  /** Issue #1037 — optional display-currency conversion, purely presentational. */
+  rate?: import('@/lib/currency').ExchangeRate | null;
 }) {
   const formatted = useMemo(
     () => ({
@@ -415,13 +451,23 @@ const BalanceSummary = memo(function BalanceSummary({
   return (
     <>
       <div className="mt-6 grid gap-4 sm:grid-cols-4">
-        <Stat label="Required collateral" value={`${formatted.required} XLM`} hint={oracleNote()} />
+        <Stat
+          label="Required collateral"
+          value={`${formatted.required} XLM`}
+          hint={oracleNote()}
+          converted={rate ? formatConverted(onChainAccount.requiredCollateral, rate) : undefined}
+        />
         <Stat
           label="Posted collateral"
           value={`${formatted.collateral} XLM`}
           accent={shortfall > 0n ? 'danger' : 'success'}
+          converted={rate ? formatConverted(onChainAccount.collateralBalance, rate) : undefined}
         />
-        <Stat label="Reserve (auto-top-up pool)" value={`${formatted.reserve} XLM`} />
+        <Stat
+          label="Reserve (auto-top-up pool)"
+          value={`${formatted.reserve} XLM`}
+          converted={rate ? formatConverted(onChainAccount.reserveBalance, rate) : undefined}
+        />
         <Stat
           label="Yield accrued (sim BENJI)"
           value={`${formatted.yieldAccrued} XLM`}
