@@ -65,6 +65,11 @@ See [docs/local-dev.md](docs/local-dev.md) for troubleshooting local environment
   cargo fmt --all
   cargo clippy --workspace --all-targets --all-features -- -D warnings
   ```
+- **Dependency graph**: if you add or remove a workspace dependency, regenerate the committed graph (`make dep-graph`) and commit the updated `docs/dep-graph.svg`. Verify it is current with:
+  ```bash
+  npm run check:dep-graph   # regenerates, renders with Graphviz, and diffs against docs/dep-graph.svg
+  ```
+  This check requires Graphviz's `dot` binary; if it is missing the check prints an install hint and exits 0 (non-blocking). See [docs/dep-graph.md](docs/dep-graph.md) for install instructions.
 
 ### Code Formatting & Pre-commit Hooks
 
@@ -107,10 +112,19 @@ The watch command uses `-w src/` to watch crate source files only, avoiding buil
 | Contract unit tests | `cargo test --workspace` (or `npm run contract:test`) |
 | API integration tests | `npm run test:integration --workspace=apps/api` |
 | SDK tests | `npm run test --workspace=packages/sdk` (runs `src/compatibility.test.ts` via `tsx --test`) |
+| Operational scripts | `npm run test:scripts` (runs `scripts/__tests__/*.test.ts` via `tsx --test --test-force-exit`; node-only, no external services) |
 | Happy-path e2e smoke | `npm run e2e` — start the API first (`npm run dev:api`), then run from the repo root. Exits non-zero on any step failure. |
 | End-to-end tests | `npx playwright test` (from `apps/web`; see `apps/web/package.json` `test:e2e`) |
 
 CI runs the contract, typecheck, and lint suites on every PR — see `.github/workflows/ci.yml` and `.github/workflows/contract.yml`.
+
+**Gap — `npm run test:scripts` is not wired into CI.** No workflow under `.github/workflows/` invokes `test:scripts`, so a change to `scripts/*.ts` is not automatically covered by the operational-scripts suite on a PR. Run `npm run test:scripts` from a fresh clone (after `npm install`; the suite needs no external services) before pushing. Adding a workflow job for it is a tracked follow-up.
+
+#### Operational-scripts test coverage
+
+`scripts/__tests__/` currently covers only: `check-contract-version`, `list-wasm-hashes`, `rollback-upgrade`, `rotate-admin`, `upgrade`, and `verify-upgrade`. The following `scripts/*.ts` files have **no** corresponding test in `scripts/__tests__/` and should be considered for future coverage:
+
+`admin.ts`, `backup-cleanup-lambda.ts`, `backup-compliance-report-lambda.ts`, `backup-state.ts`, `dep-graph.ts`, `deploy-contracts.ts`, `e2e.ts`, `ingest-dast-findings.ts`, `migrate-storage.ts`, `sdk-smoke.ts`, `seed.ts`, `setup-env.ts`, `test-regulatory-report.ts`, `upgrade-dry-run.ts`.
 
 ### Regenerating API types
 
