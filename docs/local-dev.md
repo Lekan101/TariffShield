@@ -103,6 +103,19 @@ derives the numbers from `contract_events`/`tariff_uploads` when the importer
 is a DB-only demo (dry-run), and from the live on-chain account — submitting
 with `--execute` — once the importer is really registered and funded.
 
+### Looking up importers (`admin` read commands)
+
+Instead of hand-writing a `SELECT` in `psql`, use the read-only admin commands to find an importer's id or bond id before running another admin command:
+
+```bash
+npm run admin -- list-importers                       # id, legal_name, bond_id, stellar_address, email
+npm run admin -- list-importers --email demo          # filter by email substring
+npm run admin -- get-importer --id <importer-uuid>    # full DB record + on-chain balances (best-effort)
+npm run admin -- --help                               # all commands
+```
+
+`stellar_secret_encrypted` is never selected or printed. `get-importer` reports on-chain balances when the importer is registered; seeded demo importers use placeholder addresses, so it prints "unavailable" for those.
+
 ## Common Issues
 
 - **Port Conflicts**: If port 3002 or 5432 is already in use, update the respective `.env` or `docker-compose.yml` configuration.

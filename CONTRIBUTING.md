@@ -108,9 +108,15 @@ The watch command uses `-w src/` to watch crate source files only, avoiding buil
 | API integration tests | `npm run test:integration --workspace=apps/api` |
 | SDK tests | `npm run test --workspace=packages/sdk` (runs `src/compatibility.test.ts` via `tsx --test`) |
 | Happy-path e2e smoke | `npm run e2e` — start the API first (`npm run dev:api`), then run from the repo root. Exits non-zero on any step failure. |
+| SDK smoke test (read-only, against the deployed contract in `deployments.json`) | `npm run sdk-smoke` |
+| Regulatory report API check (manual, not in CI; needs the API running) | `npm run test:regulatory-report` — see [docs/compliance/regulatory-report-verification.md](docs/compliance/regulatory-report-verification.md) |
 | End-to-end tests | `npx playwright test` (from `apps/web`; see `apps/web/package.json` `test:e2e`) |
 
 CI runs the contract, typecheck, and lint suites on every PR — see `.github/workflows/ci.yml` and `.github/workflows/contract.yml`.
+
+### Adding a new script
+
+Every file in `scripts/` is indexed in the [Scripts & Tooling](ARCHITECTURE.md#12-scripts--tooling) section of ARCHITECTURE.md. When you add, rename, or remove a script, update that table in the same PR, add a root `package.json` alias for user-facing entrypoints (e.g. `"sdk-smoke": "tsx scripts/sdk-smoke.ts"`), and put a header comment in the file describing its purpose, invocation, and prerequisites.
 
 ### Regenerating API types
 
