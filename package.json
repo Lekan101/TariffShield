@@ -28,6 +28,7 @@
     "check:env-example": "tsx scripts/check-env-example-sync.ts",
     "sync:env-example": "tsx scripts/check-env-example-sync.ts --write",
     "dep-graph": "tsx scripts/dep-graph.ts",
+    "check:dep-graph": "tsx scripts/check-dep-graph.ts",
     "backup-state": "tsx scripts/backup-state.ts",
     "verify-upgrade": "tsx scripts/verify-upgrade.ts",
     "rollback-upgrade": "tsx scripts/rollback-upgrade.ts",
@@ -98,10 +99,12 @@
     "js-yaml": "^4.1.1",
     "picomatch": "^4.0.3",
     "tar": "^7.5.1",
-    "sigstore": "^3.2.0"
+    "sigstore": "^3.2.0",
+    "toml": "^4.2.0"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.3.3",
+    "lightningcss-darwin-arm64": "^1.33.0",
     "lightningcss-linux-x64-gnu": "^1.33.0"
   }
 }

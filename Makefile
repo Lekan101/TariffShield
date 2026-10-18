@@ -1,4 +1,4 @@
-.PHONY: help dev test build contract-deploy db db-wait db-migrate db-reset clean dep-graph watch-contracts watch-contracts-docker
+.PHONY: help dev test build contract-deploy db db-wait db-migrate db-reset clean dep-graph check-dep-graph watch-contracts watch-contracts-docker
 
 help:
 	@echo "Available targets:"
@@ -12,6 +12,7 @@ help:
 	@echo "  db-migrate      - Run database migrations"
 	@echo "  db-reset        - Drop/recreate DB, run migrations, and seed data"
 	@echo "  dep-graph       - Generate dependency graph and update docs/dep-graph.svg"
+	@echo "  check-dep-graph - Fail if docs/dep-graph.svg is stale vs scripts/dep-graph.ts (needs Graphviz)"
 	@echo "  clean           - Remove node_modules and build artifacts"
 
 dev:
@@ -74,6 +75,9 @@ db-reset:
 dep-graph:
 	npm run dep-graph -- --format dot | dot -Tsvg -o docs/dep-graph.svg
 	@echo "Dependency graph updated: docs/dep-graph.svg"
+
+check-dep-graph:
+	npm run check:dep-graph
 
 clean:
 	rm -rf node_modules
