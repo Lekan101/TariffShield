@@ -39,7 +39,7 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "generate:types": "openapi-typescript docs/security/openapi.yaml -o packages/api-types/index.ts",
     "watch:contracts": "cd contracts/tariff-shield && cargo watch -x test -w src/",
-    "prepare": "husky install || true"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.rs": [
