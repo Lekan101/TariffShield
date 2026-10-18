@@ -51,4 +51,17 @@ describe('Issue #678 — request() error handling and body parsing', () => {
       return true;
     });
   });
+
+  it('resolves with the parsed body on a 2xx response', async () => {
+    const payload = { token: 't0k3n', user: { id: 'u1', email: 'a@b.co', role: 'importer' } };
+    mockFetch(JSON.stringify(payload), 200);
+
+    assert.deepEqual(await api.login(creds), payload);
+  });
+
+  it('resolves with null on an empty-body 2xx (204) instead of crashing JSON.parse', async () => {
+    mockFetch(null, 204);
+
+    assert.equal(await api.login(creds), null);
+  });
 });
