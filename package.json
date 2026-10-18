@@ -22,6 +22,8 @@
     "contract:deploy": "tsx scripts/deploy-contracts.ts",
     "seed": "tsx scripts/seed.ts",
     "e2e": "tsx scripts/e2e.ts",
+    "sdk-smoke": "tsx scripts/sdk-smoke.ts",
+    "test:regulatory-report": "tsx scripts/test-regulatory-report.ts",
     "admin": "tsx scripts/admin.ts",
     "upgrade": "tsx scripts/upgrade.ts",
     "setup-env": "tsx scripts/setup-env.ts",

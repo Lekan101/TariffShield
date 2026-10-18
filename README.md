@@ -57,7 +57,8 @@ tariffshield/
 │   ├── verify-upgrade.ts           Post-upgrade verification suite
 │   ├── rollback-upgrade.ts         Emergency rollback to previous wasm hash
 │   ├── list-wasm-hashes.ts         Deployment history query tool
-│   └── dep-graph.ts                Monorepo dependency graph generator
+│   ├── dep-graph.ts                Monorepo dependency graph generator
+│   └── ...                         Full index: ARCHITECTURE.md#12-scripts--tooling
 ├── docker-compose.yml              Postgres on :5443
 ├── deployments.json                Contract ID + addresses + verification tx hashes
 ├── docs/dep-graph.md               Package dependency visualization
