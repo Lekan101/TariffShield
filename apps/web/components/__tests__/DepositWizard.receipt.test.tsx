@@ -71,4 +71,22 @@ describe('DepositWizard receipt txHash (Issue #671)', () => {
     expect(container.textContent).not.toContain(FULL_HASH);
     expect(container.textContent).not.toContain(FULL_HASH.slice(0, 17));
   });
+
+  it.each([undefined, null, ''])('omits the txHash line when txHash is %p', async (txHash) => {
+    mockDeposit.mockResolvedValue({ txHash, txUrl: '' });
+    const { setError } = await depositAndReachReceipt();
+
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByText(/… ↗/)).toBeNull();
+    expect(setError).not.toHaveBeenCalledWith(expect.anything());
+  });
+
+  it('still renders the deposited amount and bucket label next to the truncated hash', async () => {
+    mockDeposit.mockResolvedValue({ txHash: FULL_HASH, txUrl: 'https://example.test/tx' });
+    await depositAndReachReceipt('reserve');
+
+    expect(screen.getByText('50 XLM deposited to reserve (auto-top-up pool)')).toBeTruthy();
+    expect(screen.getByRole('link').textContent).toBe(`${FULL_HASH.slice(0, 16)}… ↗`);
+    expect(mockDeposit).toHaveBeenCalledWith('imp-1', { amountStroops: '500000000', bucket: 'reserve' });
+  });
 });
